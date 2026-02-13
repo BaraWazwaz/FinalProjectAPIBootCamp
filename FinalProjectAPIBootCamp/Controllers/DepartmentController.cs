@@ -1,4 +1,5 @@
 ﻿using FinalProjectAPIBootCamp.Database;
+using FinalProjectAPIBootCamp.DTOs;
 using FinalProjectAPIBootCamp.Entity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,12 +16,24 @@ public class DepartmentController : ControllerBase
 		_context = context;
 	}
 
+	private DepartmentDTO restructure(Department department)
+	{
+		return new()
+		{
+			Id = department.Id,
+			Name = department.Name
+		};
+	}
+
 	// get all
 	[HttpGet]
 	public IActionResult getDepartments()
 	{
-		var deparments = _context.Departments.ToList();
-		return Ok(deparments);
+		var depratments = _context.Departments.ToList();
+		var response = new List<DepartmentDTO>();
+		foreach (var department in depratments)
+			response.Add(restructure(department));
+		return Ok(response);
 	}
 
 	// get single
@@ -31,7 +44,7 @@ public class DepartmentController : ControllerBase
 		if (department == null)
 			return NotFound();
 		else
-			return Ok(department);
+			return Ok(restructure(department));
 	}
 
 	// add
@@ -40,7 +53,11 @@ public class DepartmentController : ControllerBase
 	{
 		if (name == null)
 			return BadRequest("Name cannot be null");
-		var department = new Department { Name = name };
+	
+		var department = new Department
+		{
+			Name = name
+		};
 		_context.Departments.Add(department);
 		_context.SaveChanges();
 		return Ok();
@@ -52,9 +69,11 @@ public class DepartmentController : ControllerBase
 	{
 		if (name == null)
 			return BadRequest("Name cannot be null");
+		
 		var department = _context.Departments.Find(id);
 		if (department == null)
 			return NotFound();
+		
 		department.Name = name;
 		_context.SaveChanges();
 		return Ok();
@@ -67,6 +86,12 @@ public class DepartmentController : ControllerBase
 		var department = _context.Departments.Find(id);
 		if (department == null)
 			return NotFound();
+		
+		foreach (var employee in department.Employees)
+		{
+			if (employee != null)
+				_context.Employees.Remove(employee);
+		}
 		_context.Departments.Remove(department);
 		_context.SaveChanges();
 		return Ok();

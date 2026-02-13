@@ -1,6 +1,6 @@
-﻿namespace FinalProjectAPIBootCamp.Entity;
+﻿namespace FinalProjectAPIBootCamp.DTOs;
 
-public class EmployeeResponseDTO
+public class EmployeeDTO
 {
 	public Guid Id { get; set; } = Guid.NewGuid();
 	public string Name { get; set; }

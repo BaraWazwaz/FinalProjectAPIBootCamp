@@ -1,4 +1,5 @@
 ﻿using FinalProjectAPIBootCamp.Database;
+using FinalProjectAPIBootCamp.DTOs;
 using FinalProjectAPIBootCamp.Entity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -10,12 +11,12 @@ namespace FinalProjectAPIBootCamp.Controllers;
 public class EmployeeController : ControllerBase
 {
 	private readonly AppDbContext _context;
-	EmployeeController(AppDbContext context)
+	public EmployeeController(AppDbContext context)
 	{
 		_context = context;
 	}
 
-	private EmployeeResponseDTO restructure(Employee employee)
+	private EmployeeDTO restructure(Employee employee)
 	{
 		var department = _context.Departments.Find(employee.DepartmentId);
 		return new()
@@ -32,7 +33,7 @@ public class EmployeeController : ControllerBase
 	public IActionResult getEmployees()
 	{
 		var employees = _context.Employees.ToList();
-		var response = new List<EmployeeResponseDTO>();
+		var response = new List<EmployeeDTO>();
 		foreach (var employee in employees)
 			response.Add(restructure(employee));
 		return Ok(response);
@@ -55,14 +56,19 @@ public class EmployeeController : ControllerBase
 	{
 		if (name == null)
 			return BadRequest("Name cannot be null");
+
 		var department = _context.Departments.Find(departmentId);
 		if (department == null)
 			return BadRequest("Department with such Id does not exist");
-		_context.Employees.Add(new()
+		
+		var employee = new Employee()
 		{
 			Name = name,
-			DepartmentId = departmentId
-		});
+			DepartmentId = departmentId,
+			Department = department
+		};
+		_context.Employees.Add(employee);
+		employee.Department.Employees.Add(employee);
 		_context.SaveChanges();
 		return Ok();
 	}
@@ -73,14 +79,18 @@ public class EmployeeController : ControllerBase
 	{
 		if (name == null)
 			return BadRequest("Name cannot be null");
+		
 		var employee = _context.Employees.Find(id);
 		if (employee == null)
 			return NotFound();
+		
 		var department = _context.Departments.Find(departmentId);
 		if (department == null)
 			return BadRequest("Department with such id does not exist");
+		
 		employee.Name = name;
 		employee.DepartmentId = departmentId;
+		employee.Department = department;
 		_context.SaveChanges();
 		return Ok();
 	}
@@ -91,6 +101,8 @@ public class EmployeeController : ControllerBase
 		var employee = _context.Employees.Find(id);
 		if (employee == null)
 			return NotFound();
+		
+		employee.Department.Employees.Remove(employee);
 		_context.Employees.Remove(employee);
 		_context.SaveChanges();
 		return Ok();
